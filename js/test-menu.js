@@ -9,8 +9,7 @@
 require("js/helper.js");
 
 director = cc.Director.getInstance();
-_winSize = director.getWinSize();
-winSize = {width:_winSize[0], height:_winSize[1]};
+winSize = director.getWinSize();
 centerPos = cc.p( winSize.width/2, winSize.height/2 );
 
 var scenes = []
@@ -40,8 +39,7 @@ var restartScene = function () {
 
 var loadScene = function (sceneIdx)
 {
-	_winSize = director.getWinSize();
-	winSize = {width:_winSize[0], height:_winSize[1]};
+	winSize = director.getWinSize();
 	centerPos = cc.p( winSize.width/2, winSize.height/2 );
 
 	var scene = new cc.Scene();
@@ -171,7 +169,7 @@ var MenuItemFontTest = BaseLayer.extend({
         item3.setFontName( "Courier New");
 
         // item could be enabled / disabled in runtime
-        item3.setIsEnabled( false );
+        item3.setEnabled( false );
 
         var menu = cc.Menu.create( item1, item2, item3 );
         menu.alignItemsVertically();
@@ -221,7 +219,7 @@ var MenuItemImageTest = BaseLayer.extend({
         item1.setCallback( this, this.item_cb );
 
         // item could be enabled / disabled in runtime
-        item3.setIsEnabled( false );
+        item3.setEnabled( false );
 
         this._menu = cc.Menu.create( item1, item2, item3 );
         this._menu.alignItemsVertically();
@@ -288,7 +286,7 @@ var MenuItemSpriteTest = BaseLayer.extend({
         item1.setCallback( this, this.item_cb );
 
         // item could be enabled / disabled in runtime
-        item3.setIsEnabled( false );
+        item3.setEnabled( false );
 
         this._menu = cc.Menu.create( item1, item2, item3 );
         this._menu.alignItemsVertically();
@@ -348,7 +346,7 @@ var MenuItemLabelTest = BaseLayer.extend({
         item1.setCallback( this, this.item_cb );
 
         // item could be enabled / disabled in runtime
-        item3.setIsEnabled( false );
+        item3.setEnabled( false );
 
         this._menu = cc.Menu.create( item1, item2, item3 );
         this._menu.alignItemsVertically();
@@ -433,6 +431,52 @@ var MenuItemToggleTest = BaseLayer.extend({
     },
 });
 
+//------------------------------------------------------------------
+//
+// MenuItemSubclass
+//
+//------------------------------------------------------------------
+
+var MyMenuItemFont = cc.MenuItemFont.extend({
+
+    ctor:function( label ) {
+        var parent = new cc.MenuItemFont();
+        __associateObjWithNative(this, parent);
+        this.init( label, this, this.callback );
+        },
+
+    callback:function(sender) {
+        cc.log("Button clicked");
+    },
+});
+
+var MenuItemSubclass = BaseLayer.extend({
+
+    _vertically : true,
+    _menu : null,
+
+    onEnter:function () {
+        this._super();
+   
+        var item1 = new MyMenuItemFont("Item 1");
+        var item2 = new MyMenuItemFont("Item 2");
+
+        this._menu = cc.Menu.create( item1, item2 );
+        this._menu.alignItemsVertically();
+        this._menu.setPosition( cc.p( winSize.width/2, winSize.height/2) );
+
+        this.addChild( this._menu );
+    },
+
+    title:function () {
+        return "Menu Item Subclass";
+    },
+    subtitle:function () {
+        return "2 items should appear";
+    },
+});
+
+
 //
 // Order of tests
 //
@@ -442,6 +486,7 @@ scenes.push( MenuItemImageTest );
 scenes.push( MenuItemSpriteTest );
 scenes.push( MenuItemLabelTest );
 scenes.push( MenuItemToggleTest );
+scenes.push( MenuItemSubclass );
 
 //------------------------------------------------------------------
 //

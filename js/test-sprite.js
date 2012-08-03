@@ -7,8 +7,7 @@
 require("js/helper.js");
 
 director = cc.Director.getInstance();
-_winSize = director.getWinSize();
-winSize = {width:_winSize[0], height:_winSize[1]};
+winSize = director.getWinSize();
 centerPos = cc.p( winSize.width/2, winSize.height/2 );
 
 var scenes = []
@@ -34,8 +33,7 @@ var restartSpriteTestAction = function () {
 
 var loadScene = function (sceneIdx)
 {
-	_winSize = director.getWinSize();
-	winSize = {width:_winSize[0], height:_winSize[1]};
+	winSize = director.getWinSize();
 	centerPos = cc.p( winSize.width/2, winSize.height/2 );
 
 	var scene = new cc.Scene();
@@ -288,7 +286,7 @@ var SpriteFrameTest = function() {
 				var name = "grossini_dance_" + i + ".png";
 			}
 
-			var frame = cache.spriteFrameByName( name );
+			var frame = cache.getSpriteFrame( name );
 			frames.push( frame );
 		}
 
@@ -312,12 +310,12 @@ var SpriteFrameTest = function() {
 			} else {
 				var name = "grossini_dance_gray_" + i + ".png";
 			}
-			var frame = cache.spriteFrameByName( name );
+			var frame = cache.getSpriteFrame( name );
 			moreFrames.push( frame );
 		}
 		for( var i = 1; i < 5; i++) {
 			var name = "grossini_blue_0" + i + ".png";
-			var frame = cache.spriteFrameByName( name );
+			var frame = cache.getSpriteFrame( name );
 			moreFrames.push( frame );
 		}
 
@@ -487,7 +485,7 @@ var SpriteOffsetAnchorFlip = function() {
 					var name = "grossini_dance_" + j + ".png";
 				}
 
-				var frame = cache.spriteFrameByName( name );
+				var frame = cache.getSpriteFrame( name );
 				frames.push( frame );
 			}
 
@@ -561,7 +559,7 @@ var SpriteBatchOffsetAnchorFlip = function() {
 					var name = "grossini_dance_" + j + ".png";
 				}
 
-				var frame = cache.spriteFrameByName( name );
+				var frame = cache.getSpriteFrame( name );
 				frames.push( frame );
 			}
 

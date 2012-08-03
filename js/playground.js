@@ -6,7 +6,7 @@
 // Javascript + cocos2d actions tests
 //
 
-require("javascript-spidermonkey/helper.js");
+require("js/helper.js");
 
 director = cc.Director.getInstance();
 _winSize = director.getWinSize();
@@ -53,13 +53,27 @@ var loadScene = function (sceneIdx)
 //	scene.walkSceneGraph(0);
 
 	director.replaceScene( scene );
-//    __jsc__.garbageCollect();
+    __jsc__.dumpRoot();
+    __jsc__.garbageCollect();
 }
 
 
 //
 // Base Layer
 //
+
+var MyMenuItemFont = cc.MenuItemFont.extend({
+
+    ctor:function () {
+        var parent = new cc.MenuItemFont();
+        __associateObjWithNative(this, parent);
+        this.init( "hello", this, this.callback );
+        },
+
+    callback:function(sender) {
+        cc.log("Button clicked");
+    },
+});
 
 var BaseLayer = cc.LayerGradient.extend({
 
@@ -68,6 +82,12 @@ var BaseLayer = cc.LayerGradient.extend({
         var parent = new cc.LayerGradient();
         __associateObjWithNative(this, parent);
         this.init(cc.c4(0, 0, 0, 255), cc.c4(0, 128, 255, 255));
+
+
+        var item = new MyMenuItemFont();
+        var menu = cc.Menu.create( item );
+        this.addChild( menu );
+        menu.setPosition( centerPos );
     },
 
     title:function () {
@@ -91,7 +111,10 @@ var BaseLayer = cc.LayerGradient.extend({
     },
 
     backCallback:function (sender) {
-       previousScene();
+//       previousScene();
+        cc.log("3");
+        __jsc__.dumpRoot();
+        __jsc__.garbageCollect();
     },
 
     onEnter:function () {
@@ -126,18 +149,22 @@ var BaseLayer = cc.LayerGradient.extend({
         var item1 = cc.MenuItemImage.create("b1.png", "b2.png", this, this.backCallback);
         var item2 = cc.MenuItemImage.create("r1.png", "r2.png", this, this.restartCallback);
         var item3 = cc.MenuItemImage.create("f1.png", "f2.png", this, this.nextCallback);
-        var item4 = cc.MenuItemFont.create("back", this, function() { require("javascript-spidermonkey/main.js"); } );
-        item4.setFontSize( 22 );
+//        var item4 = cc.MenuItemFont.create("back", this, function() { require("js/main.js"); } );
+//        item4.setFontSize( 22 );
 
-        var menu = cc.Menu.create(item1, item2, item3, item4 );
+//        var menu = cc.Menu.create(item1, item2, item3, item4 );
+        var menu = cc.Menu.create(item1, item2, item3 );
 
         menu.setPosition( cc.p(0,0) );
         item1.setPosition( cc.p(winSize.width / 2 - 100, 30));
         item2.setPosition( cc.p(winSize.width / 2, 30));
         item3.setPosition( cc.p(winSize.width / 2 + 100, 30));
-        item4.setPosition( cc.p(winSize.width - 60, winSize.height - 30 ) );
+//        item4.setPosition( cc.p(winSize.width - 60, winSize.height - 30 ) );
 
         this.addChild(menu, 1);
+
+        cc.log("2");
+        __jsc__.dumpRoot();
     }
 });
 

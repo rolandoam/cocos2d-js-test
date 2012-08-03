@@ -33,23 +33,29 @@
 // THE SOFTWARE.
 //
 
-require("javascript-spidermonkey/helper.js");
+require("js/helper.js");
 
 // Z Orders (grouped by parent)
 
-// parent is scroll node
+// parent is scroll batch node 
 Z_WATERMELON = 5;
 Z_COIN = 8;
+Z_FINISH = 9;
 Z_CHASSIS = 10;
 Z_WHEEL = 11;
-Z_FINISH = 15;
+
+// parent is scroll node (parallax node)
+Z_MOUNTAINS = 0;
+Z_SPRITES = 10;
+Z_TERRAIN = 20;
 Z_DEBUG_PHYSICS = 50;
 
 // parent is game layer
 Z_SCROLL = 10;
-Z_HUD = 15;
-Z_LABEL = 20;
-Z_DEBUG_MENU = 20;
+Z_SMOKE = 15;
+Z_HUD = 20;
+Z_LABEL = 30;
+Z_DEBUG_MENU = 30;
 
 // Game state
 STATE_PAUSE = 0;
@@ -59,8 +65,7 @@ STATE_LEVEL_COMPLETE = 3;
 
 audioEngine = cc.AudioEngine.getInstance();
 director = cc.Director.getInstance();
-_winSize = director.getWinSize();
-winSize = {width:_winSize[0], height:_winSize[1]};
+winSize = director.getWinSize();
 centerPos = cc.p( winSize.width/2, winSize.height/2 );
 
 sizeRatio = winSize.width / 480;
@@ -68,19 +73,62 @@ sizeRatio = winSize.width / 480;
 //
 // Levels
 //
-level0 = {'coins' : [ {x:1120,y:150}, {x:1160,y:140}, {x:1200,y:130}, {x:1240,y:120}, {x:1280,y:110}, ],
+levels = [];
+
+// Level 0
+levels.push( {'coins' : [ {x:300,y:50},{x:350,y:50},{x:400,y:50},{x:450,y:50},{x:500,y:50},{x:550,y:50},{x:600,y:50},
+                      {x:1300,y:50},{x:1350,y:50},{x:1400,y:50},{x:1450,y:50},{x:1500,y:50},{x:1550,y:50},{x:1600,y:50},
+                    ],
+
+          'car' : {x:80, y:60}, 
+          'finish' : {x:3000, y:20},
+
+          // points relatives to the previous point
+          'lines' : [ {x:0,y:0}, {x:850,y:0},
+                      {x:20, y:5},{x:20,y:-5}, {x:20, y:10},{x:20,y:-10}, {x:20, y:5},{x:20,y:-5},
+                      {x:500,y:0},
+                      {x:20, y:5},{x:20,y:-5}, {x:20, y:10},{x:20,y:-10}, {x:20, y:5},{x:20,y:-5},
+                      {x:500,y:0},
+                      {x:20, y:5},{x:20,y:-5}, {x:20, y:10},{x:20,y:-10}, {x:20, y:5},{x:20,y:-5},
+                      {x:500,y:0},
+                      {x:20, y:5},{x:20,y:-5}, {x:20, y:10},{x:20,y:-10}, {x:20, y:5},{x:20,y:-5},
+                      {x:300,y:0},
+                    ],
+          }
+          );
+
+// Level 1
+levels.push( {'coins' : [ {x:1120,y:150}, {x:1160,y:140}, {x:1200,y:130}, {x:1240,y:120}, {x:1280,y:110},
+                      {x:2470,y:150}, {x:2510,y:140}, {x:2550,y:130}, {x:2590,y:120}, {x:2630,y:110},
+                      {x:2220,y:60}, {x:2260,y:70}, {x:2300,y:80}, {x:2340,y:90}, {x:2380,y:100},
+                    ],
 
           'car' : {x:80, y:60}, 
           'finish' : {x:3400, y:20},
 
-          // points in absolute position.
-//          'segments' : [ {x0:0, y0:0, x1:100, y1:50}, ],
-          'segments' : [],
-
           // points relatives to the previous point
           'lines' : [ {x:0,y:0}, {x:350,y:10}, {x:20, y:5}, {x:500, y:-20}, {x:200, y:80}, {x:100, y:-40}, {x:200,y:-10}, {x:400, y:-50}, {x:300,y:0}, {x:400,y:100}, {x:200,y:-100}, {x:400,y:0}, {x:20,y:15}, {x:20,y:-15}, {x:400,y:0}, ],
-          'map' : 'map.png',
-          };
+          }
+          );
+
+// Level 2
+levels.push( {'coins' : [ {x:1120,y:150}, {x:1160,y:140}, {x:1200,y:130}, {x:1240,y:120}, {x:1280,y:110},
+                    ],
+
+          'car' : {x:80, y:60}, 
+          'finish' : {x:4100, y:-100},
+
+          // points relatives to the previous point
+          'lines' : [ {x:0,y:0}, {x:350,y:0},
+                      {x:300, y:100}, {x:100, y:50}, {x:50, y:12}, {x:25, y:0}, {x:50,y:-12}, {x:100, y:-25}, {x:400, y:-200}, {x:500, y:0},
+                      {x:20, y:15},{x:20,y:-15}, {x:20, y:5},{x:20,y:-5},
+                      {x:300,y:0},
+                      {x:300, y:100}, {x:100, y:50}, {x:50, y:12}, {x:25, y:0}, {x:50,y:-12}, {x:100, y:-25}, {x:400, y:-200}, {x:500, y:0},
+                      {x:20, y:15},{x:20,y:-15}, {x:20, y:5},{x:20,y:-5},
+                      {x:300,y:0},
+                    ],
+          }
+          );
 //
 // Physics constants
 //
@@ -126,6 +174,7 @@ WATERMELON_MASS = 0.05;
 // Node Tags (used by CocosBuilder)
 SCORE_LABEL_TAG = 10;
 TIME_LABEL_TAG = 11;
+TITLE_TAG = 50;
 
 //
 // Game Layer
@@ -144,13 +193,16 @@ var GameLayer = cc.LayerGradient.extend({
     _scoreLabel:null,
     _time:0,
     _timeLabel:null,
+    _level:0,
     _state:STATE_PAUSE,
     _deferredState:null,
     _debugNode:null,
     _scrollNode:null,
+    _terrain:null,
     _carSprite:null,
+    _carSmoke:null,
 
-    ctor:function () {
+    ctor:function (level) {
                                 
         var parent = new cc.LayerGradient();
         __associateObjWithNative(this, parent);
@@ -161,15 +213,19 @@ var GameLayer = cc.LayerGradient.extend({
         this.enableEvents( true );
 
         cc.MenuItemFont.setFontSize(16 * sizeRatio );
-        var item1 = cc.MenuItemFont.create("Reset", this, this.onReset);
+
+        var item1_pause = cc.MenuItemFont.create("Pause" );
+        var item1_resume = cc.MenuItemFont.create("Resume" );
+        var item1 = cc.MenuItemToggle.create( item1_pause, item1_resume );
+        item1.setCallback( this, this.onPause);
         var item2 = cc.MenuItemFont.create("Debug On/Off", this, this.onToggleDebug);
         var menu = cc.Menu.create( item1, item2 );
         menu.alignItemsVertically();
         this.addChild( menu, Z_DEBUG_MENU );
-        menu.setPosition( cc._p( winSize.width-(40*sizeRatio), winSize.height-(80*sizeRatio) )  );
+        menu.setPosition( cc._p( winSize.width-(50*sizeRatio), winSize.height-(80*sizeRatio) )  );
     
         var animCache = cc.AnimationCache.getInstance();
-        animCache.addAnimationsWithFile("coins_animation.plist");
+        animCache.addAnimations("coins_animation.plist");
 
         // scrollng Node.. all game objects are children of this node (or one of its subchildre)
         var scroll = cc.ParallaxNode.create();
@@ -179,13 +235,24 @@ var GameLayer = cc.LayerGradient.extend({
         // coin only needed to obtain the texture for the Batch Node
         var coin = cc.Sprite.createWithSpriteFrameName("coin01.png");
         this._batch = cc.SpriteBatchNode.createWithTexture( coin.getTexture(), 100 );
-        scroll.addChild( this._batch, 0, cc._p(1,1), cc.POINT_ZERO );
+        scroll.addChild( this._batch, Z_SPRITES, cc._p(1,1), cc.POINT_ZERO );
 
         // "endless" background image
-        var background = cc.Sprite.create("Parallax.png", cc.rect(0,0,4096,512) );
-        scroll.addChild(background, -1, cc._p(0.2, 0.2), cc.POINT_ZERO);
+        var background = cc.Sprite.create("Parallax.pvr.gz", cc.rect(0,0,4096,512) );
+        scroll.addChild(background, Z_MOUNTAINS , cc._p(0.2, 0.2), cc._p(0,-150));
         background.setAnchorPoint( cc.POINT_ZERO );
         background.getTexture().setTexParameters(gl.LINEAR, gl.LINEAR, gl.REPEAT, gl.CLAMP_TO_EDGE);
+
+        // Terrain
+        this._terrain = cc.DrawNode.create();
+        scroll.addChild( this._terrain, Z_TERRAIN, cc._p(1,1), cc.POINT_ZERO );
+//        this._terrain.setVisible( false );
+
+        // Smoke
+        this._carSmoke = cc.ParticleSystem.create( "car_smoke.plist" );
+        this._carSmoke.setPosition( cc.POINT_ZERO );
+        this.addChild( this._carSmoke, Z_SMOKE );
+        this._carSmoke.setPositionType( cc.PARTICLE_TYPE_RELATIVE );
 
         this._shapesToRemove = [];
 
@@ -194,6 +261,7 @@ var GameLayer = cc.LayerGradient.extend({
         this._score = 0;
         this._time = 0;
         this._state = STATE_PAUSE;
+        this._level = level;
 
     },
 
@@ -224,8 +292,32 @@ var GameLayer = cc.LayerGradient.extend({
     //
     // Events
     //
-    onReset:function(sender) {
-        run();
+    onRestart:function(sender) {
+        var scene = cc.Scene.create();
+        var layer = new GameLayer(this._level);
+        scene.addChild( layer );
+        director.replaceScene( cc.TransitionFade.create(1, scene) );
+    },
+
+    onPause:function(sender) {
+        if( this._state == STATE_PAUSE )
+            this._state = STATE_PLAYING;
+        else
+            this._state = STATE_PAUSE;
+    },
+
+    onNextLevel:function(sender) {
+        var scene = cc.Scene.create();
+        var layer = new GameLayer(this._level+1);
+        scene.addChild( layer );
+        director.replaceScene( cc.TransitionFade.create(1, scene) );
+    },
+
+    onMainMenu:function(sender) {
+        var scene = cc.Scene.create();
+        var layer = new MenuLayer();
+        scene.addChild( layer );
+        director.replaceScene( cc.TransitionProgressRadialCCW.create(1, scene) );
     },
 
     onToggleDebug:function(sender) {
@@ -253,8 +345,26 @@ var GameLayer = cc.LayerGradient.extend({
     onEnterTransitionDidFinish:function() {
 
         this.initPhysics();
-        this.setupLevel(0);
+        this.setupLevel(this._level);
+
         this._state = STATE_PLAYING;
+
+        // Level Label
+        var label = cc.LabelBMFont.create("LEVEL " + this._level, "Abadi40.fnt" );
+        label.setPosition( centerPos );
+        this.addChild( label, Z_LABEL );
+        var d = cc.DelayTime.create(1);
+        var scale = cc.ScaleBy.create(1.1, 5);
+        var fade = cc.FadeOut.create(1.1);
+        var s = cc.Spawn.create( scale, fade );
+        var selfremove = cc.CallFunc.create(this, this.onRemoveMe );
+        var seq = cc.Sequence.create(d, s, selfremove );
+        label.runAction( seq );
+        
+    },
+
+    onRemoveMe:function( sender ) {
+        sender.removeFromParentAndCleanup( true );
     },
 
     onExit:function() {
@@ -320,6 +430,12 @@ var GameLayer = cc.LayerGradient.extend({
         if( this._state != STATE_PAUSE )
             cp.spaceStep( this._space, dt);
 
+        // sync smoke with car
+        if( this._carSprite ) {
+            var p = this._carSprite.convertToWorldSpace( cc.POINT_ZERO );
+            this._carSmoke.setPosition( p );
+        }
+
         var l = this._shapesToRemove.length;
 
         for( var i=0; i < l; i++ ) {
@@ -354,10 +470,7 @@ var GameLayer = cc.LayerGradient.extend({
         var width = winSize.width;
         var height = winSize.height;
 
-        var level = level0;
-
-        if( lvl == 0 )
-            level = level0;
+        var level = levels[ lvl ];
         
         // Coins
         var coins = level['coins']; 
@@ -374,29 +487,35 @@ var GameLayer = cc.LayerGradient.extend({
         var finish = level['finish'];
         this.createFinish( cp._v(finish.x, finish.y) );
 
-        // Segments
-        var segments = level['segments']; 
-        for( var i=0; i < segments.length; i++) {
-            var segment = segments[i];
-            this.createSegment( cp._v(segment.x0, segment.y0), cp._v(segment.x1, segment.y1) ); 
-        }
-
         //lines  
+        var poly = [];
         var p = {x:0, y:0};
         var lines = level['lines']; 
+
         for( var i=0; i < lines.length; i++) {
             var line = lines[i];
             if( i > 0 ) {
                 this.createSegment( cp._v(p.x, p.y), cp._v( p.x+line.x, p.y+line.y )  ); 
+                this._terrain.drawSegment( cc._p(p.x, p.y), cc._p(p.x+line.x, p.y+line.y), 5, cc.c4f(0.43,0.39,0.34,1) );
             }
 
             p = {x:p.x+line.x, y:p.y+line.y};
 
+            poly.push( cc.p(p.x, p.y) );
+
+            // needed for world boundary
             x = Math.min(x, p.x);
             y = Math.min(y, p.y);
             width = Math.max( width, p.x);
             height = Math.max( height, p.y);
         }
+
+        poly.unshift( cc.p(x,y) );
+
+        // XXX: Bug in CCDrawNode: No tesselation, so "fill" is disabled
+        // XXX: CCDrawNode#drawPoly is super expensive... using drawSegment instead
+        // poly, fill color, border width, border color
+//        this._terrain.drawPoly( poly, cc.c4f(0,0,0,0 ), 1, cc.c4f(0.82,0.41,0.04,1) );
 
         cc.log("World Boundary: " + x + " " + y + " " + width + " " + height );
 
@@ -411,10 +530,10 @@ var GameLayer = cc.LayerGradient.extend({
 
 		var staticBody = cp.spaceGetStaticBody( this._space );
 
-        var x = rect[0];
-        var y = rect[1];
-        var w = rect[2];
-        var h = rect[3];
+        var x = rect.x;
+        var y = rect.y;
+        var w = rect.width;
+        var h = rect.height;
 
 		// Walls
 		var walls =[cp.segmentShapeNew( staticBody, cp._v(x,y), cp._v(w,y), 0 ),   // bottom
@@ -457,7 +576,6 @@ var GameLayer = cc.LayerGradient.extend({
             // _motor.maxForce = cpfclamp01(1.0 - (_chassis.body.angVel - _rearWheel.body.angVel)/ENGINE_MAX_W)*ENGINE_MAX_TORQUE;
             var maxForce = cp.fclamp01(1.0 - ( (cp.bodyGetAngVel(this._chassis) - cp.bodyGetAngVel(this._rearWheel)) / ENGINE_MAX_W)) * ENGINE_MAX_TORQUE;
             cp.constraintSetMaxForce( this._motor, maxForce );
-            cc.log(" MAX FORCE: " + maxForce );
 
             // Set the brakes to apply the baseline rolling friction torque.
             cp.constraintSetMaxForce( this._frontBrake, ROLLING_FRICTION );
@@ -549,7 +667,7 @@ var GameLayer = cc.LayerGradient.extend({
 
     createWheel : function( pos ) {
         var sprite = cc.ChipmunkSprite.createWithSpriteFrameName("Wheel.png");  
-        var radius = 0.95 * sprite.getContentSize()[0] / 2;
+        var radius = 0.95 * sprite.getContentSize().width / 2;
 
 		var body = cp.bodyNew(WHEEL_MASS, cp.momentForCircle(WHEEL_MASS, 0, radius, cp.vzero ) );
 		cp.bodySetPos( body, pos );
@@ -572,12 +690,12 @@ var GameLayer = cc.LayerGradient.extend({
         var sprite = cc.ChipmunkSprite.createWithSpriteFrameName("Chassis.png"); 
         var anchor = cp.vadd( sprite.getAnchorPointInPoints(), COG_ADJUSTMENT );
         var cs = sprite.getContentSize();
-        sprite.setAnchorPoint( cc.p(anchor[0] / cs[0], anchor[1]/cs[1]) );
+        sprite.setAnchorPoint( cc.p(anchor.x / cs.width, anchor.y/cs.height) );
 
         // XXX: Space Patrol uses a nice poly for the chassis.
         // XXX: Add something similar here, instead of a boxed chassis
 
-        var body = cp.bodyNew( CHASSIS_MASS, cp.momentForBox(CHASSIS_MASS, cs[0], cs[1] ) );
+        var body = cp.bodyNew( CHASSIS_MASS, cp.momentForBox(CHASSIS_MASS, cs.width, cs.height ) );
         cp.bodySetPos( body, pos );
         sprite.setBody( body );
 
@@ -586,7 +704,7 @@ var GameLayer = cc.LayerGradient.extend({
         this._carSprite = sprite;
 
         // bottom of chassis
-        var shape = cp.boxShapeNew( body, cs[0], 15 );
+        var shape = cp.boxShapeNew( body, cs.width, 15 );
 		cp.shapeSetFriction(shape, 0.3);
 		cp.shapeSetGroup( shape, GROUP_BUGGY );
 		cp.shapeSetLayers( shape, COLLISION_LAYERS_BUGGY );
@@ -617,7 +735,7 @@ var GameLayer = cc.LayerGradient.extend({
         // create some fruits
         for(var i=0; i < 4;i++) {
             var sprite = cc.ChipmunkSprite.createWithSpriteFrameName("watermelon.png");  
-            var radius = 0.95 * sprite.getContentSize()[0] / 2;
+            var radius = 0.95 * sprite.getContentSize().width / 2;
 
             var body = cp.bodyNew(WATERMELON_MASS, cp.momentForCircle(WATERMELON_MASS, 0, radius, cp.vzero) );
             cp.bodySetPos( body, pos );
@@ -636,7 +754,7 @@ var GameLayer = cc.LayerGradient.extend({
     createCoin: function( pos ) {
         // coins are static bodies and sensors
         var sprite = cc.ChipmunkSprite.createWithSpriteFrameName("coin01.png");  
-        var radius = 0.95 * sprite.getContentSize()[0] / 2;
+        var radius = 0.95 * sprite.getContentSize().width / 2;
         
         var body = cp.bodyNew(1, 1);
         cp.bodyInitStatic(body);
@@ -652,7 +770,7 @@ var GameLayer = cc.LayerGradient.extend({
         cp.spaceAddStaticShape( this._space, shape );
         this._batch.addChild( sprite, Z_COIN);
 
-        var animation = cc.AnimationCache.getInstance().getAnimationByName("coin");
+        var animation = cc.AnimationCache.getInstance().getAnimation("coin");
         var animate = cc.Animate.create(animation); 
         var repeat = cc.RepeatForever.create( animate );
         sprite.runAction( repeat );
@@ -671,7 +789,7 @@ var GameLayer = cc.LayerGradient.extend({
         sprite.setBody( body );
         cp.bodySetPos( body, pos );
 
-        var shape = cp.boxShapeNew( body, cs[0], cs[1] );
+        var shape = cp.boxShapeNew( body, cs.width, cs.height );
         cp.shapeSetCollisionType( shape, COLLISION_TYPE_FINISH );
         cp.shapeSetSensor( shape, true );
 
@@ -700,31 +818,83 @@ var GameLayer = cc.LayerGradient.extend({
     setGameState: function( state ) {
         if( state != this._state ) {
 
-            if( state == STATE_GAME_OVER  ) {
-                var label = cc.LabelBMFont.create("GAME OVER", "Abadi40.fnt" );
-                label.setPosition( centerPos );
-                this.addChild( label, Z_LABEL );
+            if( state == STATE_GAME_OVER  )
+                this.displayGameOver();
 
-                this.enableEvents( false );
-                this.enableCollisionEvents( false );
-
-                audioEngine.playEffect("GameOver.wav");
-            }
-
-            else if (state == STATE_LEVEL_COMPLETE ) {
-                var label = cc.LabelBMFont.create("LEVEL COMPLETE", "Abadi40.fnt" );
-                label.setPosition( centerPos );
-                this.addChild( label, Z_LABEL );
-
-                this.enableEvents( false );
-                this.enableCollisionEvents( false );
-
-                audioEngine.playEffect("LevelComplete.wav");
-            }
+            else if (state == STATE_LEVEL_COMPLETE )
+                this.displayLevelComplete();
 
             this._state = state;
         }
         this._deferredState = null;
+    },
+
+    displayLevelComplete:function() {
+        
+
+        if( this._level+1 < levels.length ) {
+            cc.MenuItemFont.setFontSize(16 * sizeRatio );
+            var item1 = cc.MenuItemFont.create("Next Level", this, this.onNextLevel);
+            var menu = cc.Menu.create( item1 );
+            menu.alignItemsVertically();
+            this.addChild( menu, Z_DEBUG_MENU );
+            menu.setPosition( cc._p( winSize.width/2, winSize.height/3 )  );
+
+            var legend = "LEVEL COMPLETE";
+        } else {
+            cc.MenuItemFont.setFontSize(16 * sizeRatio );
+            var item1 = cc.MenuItemFont.create("Main Menu", this, this.onMainMenu);
+            var menu = cc.Menu.create( item1 );
+            menu.alignItemsVertically();
+            this.addChild( menu, Z_DEBUG_MENU );
+            menu.setPosition( cc._p( winSize.width/2, winSize.height/3 )  );
+
+            var legend = "GAME COMPLETE";
+        }
+
+        var label = cc.LabelBMFont.create(legend, "Abadi40.fnt" );
+        label.setPosition( centerPos );
+        label.setScale(0.2);
+        var sa = cc.ScaleTo.create(0.5, 1.05 );
+        var sb1 = cc.ScaleTo.create(0.5, 1 );
+        var sb2 = cc.ScaleTo.create(0.5, 1.05);
+        var seq = cc.Sequence.create( sb1, sb2 );
+        var rep = cc.Repeat.create( seq, 1000 );
+        var all = cc.Sequence.create( sa, rep );
+        label.runAction( all );
+        this.addChild( label, Z_LABEL );
+
+        this.enableEvents( false );
+        this.enableCollisionEvents( false );
+
+        audioEngine.playEffect("LevelComplete.wav");
+    },
+
+    displayGameOver:function() {
+        var label = cc.LabelBMFont.create("GAME OVER", "Abadi40.fnt" );
+        label.setPosition( centerPos );
+        this.addChild( label, Z_LABEL );
+        label.setScale(0.2);
+        var sa = cc.ScaleTo.create(0.5, 1.05 );
+        var sb1 = cc.ScaleTo.create(0.5, 1 );
+        var sb2 = cc.ScaleTo.create(0.5, 1.05);
+        var seq = cc.Sequence.create( sb1, sb2 );
+        var rep = cc.Repeat.create( seq, 1000 );
+        var all = cc.Sequence.create( sa, rep );
+        label.runAction( all );
+
+        this.enableEvents( false );
+        this.enableCollisionEvents( false );
+
+        audioEngine.playEffect("GameOver.wav");
+
+        cc.MenuItemFont.setFontSize(16 * sizeRatio );
+        var item1 = cc.MenuItemFont.create("Play Again", this, this.onRestart);
+        var item2 = cc.MenuItemFont.create("Main Menu", this, this.onMainMenu);
+        var menu = cc.Menu.create( item1, item2 );
+        menu.alignItemsVertically();
+        this.addChild( menu, Z_DEBUG_MENU );
+        menu.setPosition( cc._p( winSize.width/2, winSize.height/3 )  );
     },
 
 
@@ -757,9 +927,9 @@ var GameLayer = cc.LayerGradient.extend({
 });
 
 //
-// Main Menu
+// Boot Layer
 //
-var MainMenu = cc.Layer.extend({
+var BootLayer = cc.Layer.extend({
 
     ctor:function () {
                                 
@@ -767,30 +937,141 @@ var MainMenu = cc.Layer.extend({
         __associateObjWithNative(this, parent);
         this.init();
 
+        // music
+        audioEngine.playBackgroundMusic("game-music.mp3");
+        audioEngine.preloadEffect("pickup_coin.wav");
+
+		var cache = cc.SpriteFrameCache.getInstance();
+		cache.addSpriteFrames( "coins.plist" );
+    },
+    
+    onEnter:function() {
+        var scene = cc.Scene.create();
+        var layer = new MenuLayer();
+        scene.addChild( layer );
+        director.replaceScene( scene );
+    },
+});
+
+//
+// Main Menu
+//
+var MenuLayer = cc.Layer.extend({
+
+    ctor:function () {
+                                
+        var parent = new cc.Layer();
+        __associateObjWithNative(this, parent);
+        this.init();
 
         // background
-        var node = cc.Reader.load("MainMenu.ccbi", this, _winSize);
+        var node = cc.Reader.load("MainMenu.ccbi", this, winSize);
         this.addChild( node );
+        var label = node.getChildByTag( TITLE_TAG );
+        var o = label.getChildByTag( 8 );
+
+        var a_delay = cc.DelayTime.create(6);
+        var a_tint = cc.TintTo.create( 0.5, 0, 255, 0 );
+        var a_rotate = cc.RotateBy.create( 4, 360 );
+        var a_rep = cc.Repeat.create( a_rotate, 1000 );
+        var a_seq = cc.Sequence.create( a_delay, a_tint, a_delay.copy(), a_rep );
+        o.runAction( a_seq );
+
     },
 
-    buttonA:function( sender) {
-        run();
-    },
-
-    buttonB:function( sender) {
+    onPlay:function( sender) {
         var scene = cc.Scene.create();
-        var layer = new GameLayer();
+        var layer = new GameLayer(0);
         scene.addChild( layer );
-        director.replaceScene( cc.TransitionSplitCols.create(1, scene) );
+        director.replaceScene( cc.TransitionFade.create(1, scene) );
     },
 
-    buttonC:function( sender ) {
-        var hi = cc.LabelTTF.create("Callbacks are working", "Arial", 28 );
-        this.addChild( hi );
-        hi.setPosition(  centerPos );
+    onOptions:function( sender) {
+        var scene = cc.Scene.create();
+        var layer = new OptionsLayer();
+        scene.addChild( layer );
+        director.replaceScene( cc.TransitionFlipY.create(1, scene) );
     },
 
+    onAbout:function( sender ) {
+        var scene = cc.Scene.create();
+        var layer = new AboutLayer();
+        scene.addChild( layer );
+        director.replaceScene( cc.TransitionZoomFlipY.create(1, scene) );
+    },
 });
+
+//
+// About
+//
+var AboutLayer = cc.Layer.extend({
+
+    ctor:function () {
+        var parent = new cc.LayerGradient();
+        __associateObjWithNative(this, parent);
+        this.init();
+
+        var about = cc.Reader.load("About.ccbi", this);
+        this.addChild( about )
+
+        var back = cc.MenuItemFont.create("Back", this, this.onBack );
+        back.setColor( cc.BLACK );
+        var menu = cc.Menu.create( back );
+        this.addChild( menu );
+        menu.alignItemsVertically();
+        menu.setPosition( cc._p( winSize.width - 50, 50) );
+
+    },
+
+    onBack:function( sender) {
+        var scene = cc.Scene.create();
+        var layer = new MenuLayer();
+        scene.addChild( layer );
+        director.replaceScene( cc.TransitionFlipX.create(1, scene) );
+    },
+});
+
+//
+// Options 
+//
+var OptionsLayer = cc.LayerGradient.extend({
+
+    ctor:function () {
+        var parent = new cc.LayerGradient();
+        __associateObjWithNative(this, parent);
+        this.init(cc.c4(0, 0, 0, 255), cc.c4(255, 255, 255, 255));
+
+        var label1 = cc.LabelBMFont.create("MUSIC ON", "konqa32.fnt" );
+        var item1 = cc.MenuItemLabel.create(label1);
+        var label2 = cc.LabelBMFont.create("MUSIC OFF", "konqa32.fnt" );
+        var item2 = cc.MenuItemLabel.create(label2);
+        var toggle = cc.MenuItemToggle.create( item1, item2 );
+        toggle.setCallback( this, this.onMusicToggle);
+
+        var back = cc.MenuItemFont.create("Back", this, this.onBack );
+        var menu = cc.Menu.create( toggle, back );
+        this.addChild( menu );
+        menu.alignItemsVertically();
+        menu.setPosition( centerPos );
+    },
+
+    onBack:function( sender) {
+        var scene = cc.Scene.create();
+        var layer = new MenuLayer();
+        scene.addChild( layer );
+        director.replaceScene( cc.TransitionFlipX.create(1, scene) );
+    },
+
+    onMusicToggle:function( sender ) {
+        // music
+        if ( audioEngine.isBackgroundMusicPlaying() ) {
+            audioEngine.stopBackgroundMusic();
+        } else {
+            audioEngine.playBackgroundMusic("game-music.mp3");
+        }
+    },
+});
+
 //------------------------------------------------------------------
 //
 // Main entry point
@@ -799,19 +1080,14 @@ var MainMenu = cc.Layer.extend({
 function run()
 {
     // update globals
-    _winSize = director.getWinSize();
-    winSize = {width:_winSize[0], height:_winSize[1]};
+    winSize = director.getWinSize();
     centerPos = cc.p( winSize.width/2, winSize.height/2 );
 
     var scene = cc.Scene.create();
 
     // main menu
-    var menu = new MainMenu();
+    var menu = new BootLayer();
     scene.addChild( menu);
-
-    // game
-//    var layer = new GameLayer();
-//    scene.addChild( layer );
 
     var runningScene = director.getRunningScene();
     if( runningScene == null )
@@ -821,5 +1097,4 @@ function run()
 }
 
 run();
-
 

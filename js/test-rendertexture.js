@@ -9,8 +9,7 @@
 require("js/helper.js");
 
 director = cc.Director.getInstance();
-_winSize = director.getWinSize();
-winSize = {width:_winSize[0], height:_winSize[1]};
+winSize = director.getWinSize();
 centerPos = cc.p( winSize.width/2, winSize.height/2 );
 spriteFrameCache = cc.SpriteFrameCache.getInstance();
 
@@ -41,8 +40,7 @@ var restartScene = function () {
 
 var loadScene = function (sceneIdx)
 {
-	_winSize = director.getWinSize();
-	winSize = {width:_winSize[0], height:_winSize[1]};
+	winSize = director.getWinSize();
 	centerPos = cc.p( winSize.width/2, winSize.height/2 );
 
 	var scene = new cc.Scene();
@@ -166,8 +164,8 @@ var RenderTextureSave = BaseLayer.extend({
         else if( platform.substring(0,6) == 'mobile' )
             this.setTouchEnabled( true );
 
-		this._brush = new cc.Sprite(); this._brush.initWithFile("fire.png");
-//        this._brush.retain();
+        this._brush = cc.Sprite.create("fire.png");
+        this._brush.retain();
 
         this._brush.setColor( cc.RED );
         this._brush.setOpacity( 20 );
@@ -192,7 +190,7 @@ var RenderTextureSave = BaseLayer.extend({
     },
 
     onExit:function() {
-//        this._brush.release();
+        this._brush.release();
     },
 
     saveCB:function(sender) {
@@ -215,12 +213,12 @@ var RenderTextureSave = BaseLayer.extend({
         if( distance > 1 ) {
             this._target.begin();
             for( var i=0; i < distance; i++ ) {
-                var diffX = this._lastLocation[0] - location[0];
-                var diffY = this._lastLocation[1] - location[1];
+                var diffX = this._lastLocation.x - location.x;
+                var diffY = this._lastLocation.y - location.y;
 
                 var delta = i / distance;
 
-                this._brush.setPosition( cc._p( location[0] + diffX * delta, location[1] + diffY * delta ) );
+                this._brush.setPosition( cc._p( location.x + diffX * delta, location.y + diffY * delta ) );
                 this._brush.setRotation( Math.random() * 360 );
                 this._brush.setScale( Math.random() * 2 );
                 this._brush.setColor( cc._c3( Math.random()*255, 255, 255) );

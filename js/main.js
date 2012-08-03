@@ -9,8 +9,7 @@
 require("js/helper.js");
 
 director = cc.Director.getInstance();
-_winSize = director.getWinSize();
-winSize = {width:_winSize[0], height:_winSize[1]};
+winSize = director.getWinSize();
 centerPos = cc.p( winSize.width/2, winSize.height/2 );
 
 scenes = []
@@ -40,8 +39,7 @@ restartScene = function () {
 
 loadScene = function (sceneIdx)
 {
-	_winSize = director.getWinSize();
-	winSize = {width:_winSize[0], height:_winSize[1]};
+	winSize = director.getWinSize();
 	centerPos = cc.p( winSize.width/2, winSize.height/2 );
 
 	var scene = new cc.Scene();
@@ -153,6 +151,7 @@ MainTest = BaseLayer.extend({
         var item12 = cc.MenuItemFont.create("Tilemap Tests", this, function() { require("js/test-tilemap.js"); } );
         var item13 = cc.MenuItemFont.create("CocosDenshion Tests", this, function() { require("js/test-cocosdenshion.js"); } );
         var item14 = cc.MenuItemFont.create("cocos2d presentation", this, function() { require("js/test-cocos2djs.js"); } );
+        var item14 = cc.MenuItemFont.create("Performance test", this, function() { require("js/test-performance.js"); } );
 
 
         this._menu = cc.Menu.create( item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12, item13, item14 );
@@ -172,14 +171,14 @@ MainTest = BaseLayer.extend({
     onTouchesMoved:function (touches, event) {
         var delta = touches[0].getDelta();
         var current = this._menu.getPosition();
-        this._menu.setPosition( cc.p( current[0], current[1] + delta[1] ) );
+        this._menu.setPosition( cc.p( current.x, current.y + delta.y ) );
         return true;
     },
 
     onMouseDragged : function( event ) {
         var delta = event.getDelta();
         var current = this._menu.getPosition();
-        this._menu.setPosition( cc.p( current[0], current[1] + delta[1] ) );
+        this._menu.setPosition( cc.p( current.x, current.y + delta.y ) );
         return true;
     },
 
