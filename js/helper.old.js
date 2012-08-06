@@ -60,7 +60,7 @@ cc.dumpConfig = function()
         for( i in cc.config )
             cc.log( i + " = " + cc.config[i] );
     }
-}
+};
 
 //
 // Point
@@ -68,10 +68,11 @@ cc.dumpConfig = function()
 cc.p = function( x, y )
 {
     return {x:x, y:y};
-}
+};
+
 cc._p = function( x, y )
 {
-    if( cc._reuse_p_index == 0 ) {
+    if( cc._reuse_p_index === 0 ) {
         cc._reuse_p0.x = x;
         cc._reuse_p0.y = y;
         cc._reuse_p_index = 1;
@@ -82,17 +83,43 @@ cc._p = function( x, y )
         cc._reuse_p_index = 0;
         return cc._reuse_p1;
     }
-}
+};
 
 cc._to_p = function( point )
 {
     return point;
-}
+};
 
 cc._from_p = function( size )
 {
     return size;
-}
+};
+
+cc.c3 = function (r, g, b) {
+    var tmp = new Uint8Array(3);
+    tmp[0] = r;
+    tmp[1] = g;
+    tmp[2] = b;
+    return tmp;
+};
+
+cc.c4 = function (r, g, b, o) {
+    var tmp = new Uint8Array(4);
+    tmp[0] = r;
+    tmp[1] = g;
+    tmp[2] = b;
+    tmp[3] = o;
+    return tmp;
+};
+
+cc.c4f = function (r, g, b, o) {
+    var tmp = new Float32Array(4);
+    tmp[0] = r;
+    tmp[1] = g;
+    tmp[2] = b;
+    tmp[3] = o;
+    return tmp;
+};
 
 //
 // Grid 
