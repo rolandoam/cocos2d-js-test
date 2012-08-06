@@ -1,29 +1,15 @@
 // cocos2d Helper
 
 cc.c3 = cc.c3 || function (r, g, b) {
-    var tmp = new Uint8Array(3);
-    tmp[0] = r;
-    tmp[1] = g;
-    tmp[2] = b;
-    return tmp;
+	return {r: r, g: g, b: b};
 };
 
 cc.c4 = cc.c4 || function (r, g, b, o) {
-    var tmp = new Uint8Array(4);
-    tmp[0] = r;
-    tmp[1] = g;
-    tmp[2] = b;
-    tmp[3] = o;
-    return tmp;
+	return {r: r, g: g, b: b, a: o};
 };
 
 cc.c4f = cc.c4f || function (r, g, b, o) {
-    var tmp = new Float32Array(4);
-    tmp[0] = r;
-    tmp[1] = g;
-    tmp[2] = b;
-    tmp[3] = o;
-    return tmp;
+	return {r: r, g: g, b: b, a: o};
 };
 
 cc.p = cc.p || function( x, y )
