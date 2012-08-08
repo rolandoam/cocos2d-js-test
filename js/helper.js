@@ -187,6 +187,19 @@ cc.rectIntersectsRect = function( rectA, rectB )
     return bool;
 }
 
+// point functions
+cc.pAdd = cc.pAdd || function (p1, p2) {
+    return {x: p1.x + p2.x, y: p1.y + p2.y};
+};
+
+cc.pSub = cc.pSub || function (p1, p2) {
+    return {x: p1.x - p2.x, y: p1.y - p2.y};
+}
+
+cc.pMult = cc.pMult || function (p1, s) {
+    return {x: p1.x * s, y: p1.y * s};
+};
+
 //
 // Array: for cocos2d-hmtl5 compatibility
 //
