@@ -7,7 +7,6 @@ if (cc.SimpleAudioEngine) {
 cc.c3 = cc.c3 || function (r, g, b) {
 	return {r: r, g: g, b: b};
 };
-
 cc.c3b = cc.c3;
 
 cc.c4 = cc.c4 || function (r, g, b, o) {
